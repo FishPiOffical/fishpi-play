@@ -76,7 +76,7 @@ router.get("/:gameKey/users", async (req: any, res) => {
 // 设置游戏配置 (回调路径、域名白名单)
 router.post("/:gameKey/config", async (req: any, res) => {
     const { gameKey } = req.params;
-    const { loginCallbackPath, domainWhitelist } = req.body;
+    const { loginCallbackPath, domainWhitelist, name } = req.body;
     
     const gameRepo = AppDataSource.getMongoRepository(Game);
     const game = req.game; // 从中间件获取游戏信息
@@ -87,6 +87,9 @@ router.post("/:gameKey/config", async (req: any, res) => {
     
     if (domainWhitelist !== undefined) {
         game.domainWhitelist = domainWhitelist;
+    }
+    if (name !== undefined && game.status !== 'approved') {
+        game.name = name;
     }
 
     await gameRepo.save(game);

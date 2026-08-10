@@ -3,7 +3,7 @@
     <h2>游戏注册</h2>
     <el-form ref="formRef" :model="form" :rules="rules" label-width="120px" style="max-width: 500px">
       <el-form-item label="游戏名称" prop="name">
-        <el-input v-model="form.name" :disabled="!!editingGame" />
+        <el-input v-model="form.name" />
       </el-form-item>
       <el-form-item label="游戏 Key" prop="key">
         <el-input v-model="form.key" />
@@ -36,6 +36,11 @@
       <el-table-column prop="name" label="游戏名称" />
       <el-table-column prop="key" label="游戏 Key" />
       <el-table-column prop="loginCallbackPath" label="回调路径" />
+      <el-table-column prop="decommissionReason" label="下架原因">
+        <template #default="scope">
+          <span>{{ scope.row.decommissionReason || '-' }}</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="status" label="状态">
         <template #default="scope">
           <el-tag :type="scope.row.status === 'pending' ? 'warning' : (scope.row.status === 'rejected' ? 'danger' : 'info')">
