@@ -40,6 +40,10 @@ export const updateGameConfig = (gameKey: string, config: { loginCallbackPath: s
     return http.post(`/management/${gameKey}/config`, config);
 };
 
+export const resubmitGame = (gameKey: string, params: { key?: string, loginCallbackPath?: string, domainWhitelist?: string[], name?: string, description?: string }) => {
+    return http.post(`/management/${gameKey}/resubmit`, params);
+};
+
 export const getGameUserArchive = (gameKey: string, userId: string) => {
     return http.get<any>(`/management/${gameKey}/users/${userId}/archive`);
 };

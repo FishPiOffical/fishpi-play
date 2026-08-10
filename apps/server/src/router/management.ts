@@ -93,6 +93,34 @@ router.post("/:gameKey/config", async (req: any, res) => {
     res.json(game);
 });
 
+// 重新提交游戏申请（修改后将状态改为 pending）
+router.post("/:gameKey/resubmit", async (req: any, res) => {
+    const { loginCallbackPath, domainWhitelist, name, description, key: newKey } = req.body;
+    const gameRepo = AppDataSource.getMongoRepository(Game);
+    const game = req.game;
+
+    // If updating key, ensure it doesn't collide with an existing active game
+    if (newKey !== undefined && newKey !== game.key) {
+        const conflict = await gameRepo.findOne({ where: { key: newKey, status: { $nin: ['rejected', 'decommissioned'] } } });
+        if (conflict) {
+            return res.status(400).error('Game key already exists');
+        }
+        game.key = newKey;
+    }
+
+    if (name !== undefined) game.name = name;
+    if (description !== undefined) game.description = description;
+    if (loginCallbackPath !== undefined) game.loginCallbackPath = loginCallbackPath;
+    if (domainWhitelist !== undefined) game.domainWhitelist = domainWhitelist;
+
+    game.status = 'pending';
+    game.decommissionReason = undefined;
+    game.updatedAt = new Date();
+
+    await gameRepo.save(game);
+    res.json(game);
+});
+
 // 获取特定用户的完整存档内容
 router.get("/:gameKey/users/:userId/archive", async (req: any, res) => {
     const { gameKey, userId } = req.params;

@@ -12,9 +12,14 @@ router.post("/register", async (req: any, res) => {
     const { name, key, loginCallbackPath, domainWhitelist, description } = req.body;
     const gameRepo = AppDataSource.getMongoRepository(Game);
     
-    const existing = await gameRepo.findOneBy({ key });
+    const existing = await gameRepo.findOne({
+        where: {
+            key,
+            status: { $nin: ['rejected', 'decommissioned'] }
+        }
+    });
     if (existing) {
-        return res.status(400).error("Game key already exists");
+        return res.status(400).error('Game key already exists');
     }
 
     const game = gameRepo.create({
