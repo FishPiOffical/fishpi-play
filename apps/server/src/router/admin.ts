@@ -85,7 +85,7 @@ router.post("/games/:id/reject", async (req, res) => {
 
         // send notice to the game's author
         const config = getConfig();
-        if (config) {
+        if (config && config.noticeGoldenKey) {
             const noticeFinger = FingerTo(config.noticeGoldenKey);
             noticeFinger.sendNotice(
                 game.createBy,

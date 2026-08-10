@@ -19,7 +19,6 @@
       </el-form-item>
       <el-form-item>
         <template v-if="editingGame">
-          <el-button type="primary" @click="saveChanges">保存修改</el-button>
           <el-button type="success" @click="resubmitChanges" style="margin-left:8px">保存并重新申请</el-button>
           <el-button @click="cancelEdit" style="margin-left:8px">取消</el-button>
         </template>
@@ -36,9 +35,12 @@
       <el-table-column prop="name" label="游戏名称" />
       <el-table-column prop="key" label="游戏 Key" />
       <el-table-column prop="loginCallbackPath" label="回调路径" />
-      <el-table-column prop="decommissionReason" label="下架原因">
+      <el-table-column prop="decommissionReason" label="下架/驳回原因">
         <template #default="scope">
-          <span>{{ scope.row.decommissionReason || '-' }}</span>
+          <span v-if="scope.row.decommissionReason || scope.row.rejectReason">
+            {{ scope.row.decommissionReason || scope.row.rejectReason }}
+          </span>
+          <span v-else>-</span>
         </template>
       </el-table-column>
       <el-table-column prop="status" label="状态">

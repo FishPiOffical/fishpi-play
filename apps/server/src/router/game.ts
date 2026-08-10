@@ -35,9 +35,9 @@ router.post("/register", async (req: any, res) => {
     });
     await gameRepo.save(game);
     const config = getConfig();
-    if (config) {
+    if (config && config.noticeGoldenKey && config.noticeUsers) {
         const noticeFinger = FingerTo(config.noticeGoldenKey);
-        config.noticeUsers.split(',').forEach(username => {
+        config.noticeUsers?.split(',').forEach(username => {
             noticeFinger.sendNotice(
               username.trim(), 
               `用户${req.user.username}发布了新的游戏《${game.name}》[待审核](https://play.adventext.fun/#/super-admin)`
