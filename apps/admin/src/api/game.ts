@@ -55,3 +55,7 @@ export const approveGame = (gameId: string) => {
 export const decommissionGame = (gameId: string, reason: string) => {
     return http.post(`/admin/games/${gameId}/decommission`, { reason });
 };
+
+export const rejectGame = (gameId: string, reason: string) => {
+    return http.post(`/admin/games/${gameId}/reject`, { reason });
+};

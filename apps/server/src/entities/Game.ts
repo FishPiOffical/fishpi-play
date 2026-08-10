@@ -27,6 +27,9 @@ export class Game {
     decommissionReason?: string;
 
     @Column()
+    rejectReason?: string;
+
+    @Column()
     createBy!: string;
 
     @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })

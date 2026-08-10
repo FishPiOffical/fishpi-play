@@ -52,7 +52,13 @@
             @click="handleApprove(scope.row as any)"
           >批准</el-button>
           <el-button 
-            v-if="scope.row.status !== 'decommissioned'"
+            v-if="scope.row.status === 'pending'"
+            size="small" 
+            type="danger"
+            @click="handleReject(scope.row as any)"
+          >驳回</el-button>
+          <el-button 
+            v-if="scope.row.status === 'approved'"
             size="small" 
             type="danger"
             @click="handleDecommission(scope.row as any)"
@@ -65,7 +71,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getGames, approveGame, decommissionGame, type Game } from '../api/game'
+import { getGames, approveGame, decommissionGame, type Game, rejectGame } from '../api/game'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const games = ref<Game[]>([])
@@ -125,6 +131,26 @@ const handleDecommission = async (game: Game) => {
   } catch (err) {
     if (err !== 'cancel') {
       console.error('下架失败', err)
+      ElMessage.error('操作失败')
+    }
+  }
+}
+
+const handleReject = async (game: Game) => {
+  try {
+    const { value: reason } = await ElMessageBox.prompt(`请输入游戏 "${game.name}" 的驳回原因`, '驳回游戏', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      inputPattern: /.+/,
+      inputErrorMessage: '原因不能为空'
+    })
+    
+    await rejectGame(game.id, reason)
+    ElMessage.success('游戏已驳回')
+    fetchGames()
+  } catch (err) {
+    if (err !== 'cancel') {
+      console.error('驳回失败', err)
       ElMessage.error('操作失败')
     }
   }
