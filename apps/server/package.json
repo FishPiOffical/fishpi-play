@@ -15,6 +15,7 @@
     "fishpi": "^0.1.28",
     "jsonwebtoken": "^9.0.1",
     "mongodb": "^5.8.0",
+    "mysql2": "^3.24.6",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.3.17",
     "ws": "^8.13.0"

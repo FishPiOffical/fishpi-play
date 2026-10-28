@@ -19,7 +19,7 @@ router.get("/login-url", domainCheck, async (req, res) => {
       // 如果没有提供 gameKey，表示当前网站登录
       loginCallbackPath = url.origin + '/#/login?loginVerify=fishpi';
     } else {
-      const gameRepo = AppDataSource.getMongoRepository(Game);
+      const gameRepo = AppDataSource.getRepository(Game);
       const game = await gameRepo.findOneBy({ key: gameKey as string });
       
       if (!game) {
@@ -43,8 +43,8 @@ router.get("/login-url", domainCheck, async (req, res) => {
 router.post("/verify", async (req, res) => {
     const { gameKey, ...query } = req.body; // userInfo 从第三方或回跳携带
     
-    const gameRepo = AppDataSource.getMongoRepository(Game);
-    const userRepo = AppDataSource.getMongoRepository(User);
+    const gameRepo = AppDataSource.getRepository(Game);
+    const userRepo = AppDataSource.getRepository(User);
     
     if (gameKey) {
       const game = await gameRepo.findOneBy({ key: gameKey as string });
@@ -87,7 +87,7 @@ router.post("/verify", async (req, res) => {
         }
     }
     
-    const gameUserRepo = AppDataSource.getMongoRepository(GameUser);
+    const gameUserRepo = AppDataSource.getRepository(GameUser);
     if (gameKey) {
         const existingGameUser = await gameUserRepo.findOneBy({ gameKey: gameKey as string, userId: user.userId });
         if (!existingGameUser) {
@@ -103,7 +103,6 @@ router.post("/verify", async (req, res) => {
             await gameUserRepo.save(existingGameUser);
         }
     }
-
 
     const token = jwt.sign({ userId: user.userId.toString(), username: user.username.toString(), gameKey, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, user });

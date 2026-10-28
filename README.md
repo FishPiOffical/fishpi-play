@@ -23,7 +23,7 @@
 /
 ├── apps/
 │   ├── admin/      # 管理后台前端 (Vue 3, Element Plus, Vite, Pinia)
-│   └── server/     # 后端服务 (Express, TypeORM, MongoDB, TypeScript)
+│   └── server/     # 后端服务 (Express, TypeORM, MongoDB / MySQL, TypeScript)
 ├── packages/
 │   └── sdk/        # 游戏接入 SDK (Type-safe HTTP client)
 └── package.json    # 根目录工作区配置
@@ -32,8 +32,8 @@
 ## 🛠 技术栈
 
 - **Frontend**: Vue 3, Vite, Element Plus, Pinia, Vue Router, Iconify
-- **Backend**: Node.js, Express, TypeORM (MongoDB Driver), TypeScript
-- **Database**: MongoDB
+- **Backend**: Node.js, Express, TypeORM, TypeScript
+- **Database**: MongoDB / MySQL (可选)
 - **Package Manager**: NPM (Workspaces)
 
 ## 🖥️ 快速开始
@@ -41,7 +41,7 @@
 ### 环境依赖
 
 - Node.js (建议 v18+)
-- MongoDB
+- MongoDB 或 MySQL
 
 ### 安装与运行
 
@@ -51,7 +51,7 @@
    ```
 
 2. **配置后端**
-   在 `apps/server/src/config.ts` 或环境变量中配置 MongoDB 连接信息。
+   在 `apps/server/src/config.ts`、`config.json` 或环境变量中配置 MongoDB 或 MySQL 连接信息（亦可在首次访问管理后台时通过初始化界面配置）。
 
 3. **启动开发环境**
 

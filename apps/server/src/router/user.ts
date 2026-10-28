@@ -6,7 +6,7 @@ import { authenticate } from "../middleware/auth";
 const router = Router();
 
 router.get("/profile", authenticate, async (req: any, res) => {
-    const userRepo = AppDataSource.getMongoRepository(User);
+    const userRepo = AppDataSource.getRepository(User);
     const user = await userRepo.findOneBy({ userId: req.user.userId });
     res.json(user);
 });

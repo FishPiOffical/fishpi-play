@@ -1,19 +1,19 @@
 import { Router } from "express";
-import { AppDataSource } from "../data-source";
+import { AppDataSource, isMongo } from "../data-source";
 import { GameUser } from "../entities/GameUser";
 import { Archive } from "../entities/Archive";
 import { Game } from "../entities/Game";
 import { User } from "../entities/User";
 import { clients } from "../index";
-import { getOnlineUsers, sendToUserIds, sendToClientIds } from "../ws";
 import { authenticate } from "../middleware/auth";
+import { In, Not } from "typeorm";
 
 const router = Router();
 router.use(authenticate);
 
 router.use("/:gameKey", async (req: any, res, next) => {
     const { gameKey } = req.params;
-    const gameRepo = AppDataSource.getMongoRepository(Game);
+    const gameRepo = AppDataSource.getRepository(Game);
     const game = await gameRepo.findOneBy({ key: gameKey });
     
     if (!game) {
@@ -33,13 +33,19 @@ router.use("/:gameKey", async (req: any, res, next) => {
 // 获取游戏用户列表（包含在线状态、属性、存档）
 router.get("/:gameKey/users", async (req: any, res) => {
     const { gameKey } = req.params;
-    const gameUserRepo = AppDataSource.getMongoRepository(GameUser);
-    const userRepo = AppDataSource.getMongoRepository(User);
-    const archiveRepo = AppDataSource.getMongoRepository(Archive);
+    const gameUserRepo = AppDataSource.getRepository(GameUser);
+    const userRepo = AppDataSource.getRepository(User);
+    const archiveRepo = AppDataSource.getRepository(Archive);
 
     const users = await gameUserRepo.find({ where: { gameKey } });
     const userIds = users.map(u => u.userId);
-    const userDetails = await userRepo.findBy({ userId: { $in: userIds } });
+    const userDetails = userIds.length > 0 
+        ? await userRepo.find({
+            where: {
+                userId: isMongo ? ({ $in: userIds } as any) : In(userIds)
+            }
+        })
+        : [];
     
     // 聚合在线状态和存档信息
     const results = await Promise.all(users.map(async (user) => {
@@ -75,10 +81,9 @@ router.get("/:gameKey/users", async (req: any, res) => {
 
 // 设置游戏配置 (回调路径、域名白名单)
 router.post("/:gameKey/config", async (req: any, res) => {
-    const { gameKey } = req.params;
     const { loginCallbackPath, domainWhitelist, name } = req.body;
     
-    const gameRepo = AppDataSource.getMongoRepository(Game);
+    const gameRepo = AppDataSource.getRepository(Game);
     const game = req.game; // 从中间件获取游戏信息
 
     if (loginCallbackPath !== undefined) {
@@ -99,12 +104,20 @@ router.post("/:gameKey/config", async (req: any, res) => {
 // 重新提交游戏申请（修改后将状态改为 pending）
 router.post("/:gameKey/resubmit", async (req: any, res) => {
     const { loginCallbackPath, domainWhitelist, name, description, key: newKey } = req.body;
-    const gameRepo = AppDataSource.getMongoRepository(Game);
+    const gameRepo = AppDataSource.getRepository(Game);
     const game = req.game;
 
     // If updating key, ensure it doesn't collide with an existing active game
     if (newKey !== undefined && newKey !== game.key) {
-        const conflict = await gameRepo.findOne({ where: { key: newKey, status: { $nin: ['rejected', 'decommissioned'] } } });
+        const conflict = await gameRepo.findOne({
+            where: isMongo ? {
+                key: newKey,
+                status: { $nin: ['rejected', 'decommissioned'] } as any
+            } : {
+                key: newKey,
+                status: Not(In(['rejected', 'decommissioned']))
+            }
+        });
         if (conflict) {
             return res.status(400).error('Game key already exists');
         }
@@ -127,7 +140,7 @@ router.post("/:gameKey/resubmit", async (req: any, res) => {
 // 获取特定用户的完整存档内容
 router.get("/:gameKey/users/:userId/archive", async (req: any, res) => {
     const { gameKey, userId } = req.params;
-    const archiveRepo = AppDataSource.getMongoRepository(Archive);
+    const archiveRepo = AppDataSource.getRepository(Archive);
     
     const archive = await archiveRepo.findOne({
         where: { gameKey, userId },

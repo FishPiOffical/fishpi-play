@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { getOnlineUsers, getOnlineClients, sendToUserIds, sendToClientIds } from "../ws";
-import { AppDataSource } from "../data-source";
+import { AppDataSource, isMongo } from "../data-source";
 import { GameUser } from "../entities/GameUser";
 import { User } from "../entities/User";
 import { authenticate } from "../middleware/auth";
 import { domainCheck } from "../middleware/domainCheck";
+import { In } from "typeorm";
 
 const router = Router();
 
@@ -18,11 +19,15 @@ router.get('/:gameKey/users', async (req: any, res) => {
     const online = getOnlineUsers(gameKey);
 
     const userIds = online.map(u => u.userId);
-    const userRepo = AppDataSource.getMongoRepository(User);
-    const gameUserRepo = AppDataSource.getMongoRepository(GameUser);
+    const userRepo = AppDataSource.getRepository(User);
+    const gameUserRepo = AppDataSource.getRepository(GameUser);
 
-    const users = userIds.length > 0 ? await userRepo.findBy({ userId: { $in: userIds } }) : [];
-    const gameUsers = userIds.length > 0 ? await gameUserRepo.find({ where: { gameKey, userId: { $in: userIds } } }) : [];
+    const users = userIds.length > 0 
+        ? await userRepo.find({ where: { userId: isMongo ? ({ $in: userIds } as any) : In(userIds) } }) 
+        : [];
+    const gameUsers = userIds.length > 0 
+        ? await gameUserRepo.find({ where: { gameKey, userId: isMongo ? ({ $in: userIds } as any) : In(userIds) } }) 
+        : [];
 
     const results = online.map(u => {
         const userDetail = users.find(x => x.userId === u.userId) || { userId: u.userId };
@@ -44,11 +49,15 @@ router.get('/:gameKey/clients', async (req: any, res) => {
     const online = getOnlineClients(gameKey);
 
     const userIds = Array.from(new Set(online.map(c => c.userId)));
-    const userRepo = AppDataSource.getMongoRepository(User);
-    const gameUserRepo = AppDataSource.getMongoRepository(GameUser);
+    const userRepo = AppDataSource.getRepository(User);
+    const gameUserRepo = AppDataSource.getRepository(GameUser);
 
-    const users = userIds.length > 0 ? await userRepo.findBy({ userId: { $in: userIds } }) : [];
-    const gameUsers = userIds.length > 0 ? await gameUserRepo.find({ where: { gameKey, userId: { $in: userIds } } }) : [];
+    const users = userIds.length > 0 
+        ? await userRepo.find({ where: { userId: isMongo ? ({ $in: userIds } as any) : In(userIds) } }) 
+        : [];
+    const gameUsers = userIds.length > 0 
+        ? await gameUserRepo.find({ where: { gameKey, userId: isMongo ? ({ $in: userIds } as any) : In(userIds) } }) 
+        : [];
 
     const results = online.map(c => {
         const userDetail = users.find(u => u.userId === c.userId) || { userId: c.userId };
@@ -66,11 +75,15 @@ router.get('/:gameKey/:user/clients', async (req: any, res) => {
     const { gameKey, user } = req.params;
     const online = getOnlineClients(gameKey).filter(c => c.userId === user);
 
-    const userRepo = AppDataSource.getMongoRepository(User);
-    const gameUserRepo = AppDataSource.getMongoRepository(GameUser);
+    const userRepo = AppDataSource.getRepository(User);
+    const gameUserRepo = AppDataSource.getRepository(GameUser);
 
-    const users = online.length > 0 ? await userRepo.findBy({ userId: { $in: [user] } }) : [];
-    const gameUsers = online.length > 0 ? await gameUserRepo.find({ where: { gameKey, userId: { $in: [user] } } }) : [];
+    const users = online.length > 0 
+        ? await userRepo.find({ where: { userId: isMongo ? ({ $in: [user] } as any) : In([user]) } }) 
+        : [];
+    const gameUsers = online.length > 0 
+        ? await gameUserRepo.find({ where: { gameKey, userId: isMongo ? ({ $in: [user] } as any) : In([user]) } }) 
+        : [];
 
     const results = online.map(c => {
         const userDetail = users.find(u => u.userId === c.userId) || { userId: c.userId };
