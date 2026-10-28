@@ -61,7 +61,7 @@ export { ClientInfo } from './ws';
 export { clients } from './ws';
 
 if (IS_CONFIGURED) {
-    import('./data-source').then(({ AppDataSource }) => AppDataSource.initialize()
+    import('./data-source').then(({ initDataSource }) => initDataSource()
         .then(() => {
             console.log("Data Source has been initialized!");
 
@@ -82,11 +82,22 @@ if (IS_CONFIGURED) {
         .catch((error) => console.log(error)));
 } else {
     app.post("/api/setup", (req, res) => {
-        const { mongodb, jwtSecret, noticeGoldenKey, noticeUsers } = req.body;
-        if (!mongodb || !jwtSecret || !noticeGoldenKey || !noticeUsers) {
-            return res.error("参数不完整");
+        const { dbType = "mongodb", mongodb, mysql, jwtSecret, noticeGoldenKey, noticeUsers } = req.body;
+        if (!jwtSecret) {
+            return res.error("参数不完整: jwtSecret 必填");
         }
-        saveConfig({ mongodb, jwtSecret, noticeGoldenKey, noticeUsers });
+        if (dbType === "mysql") {
+            if (!mysql || !mysql.host || !mysql.port || !mysql.database) {
+                return res.error("MySQL 配置不完整");
+            }
+        } else if (dbType === "mongodb") {
+            if (!mongodb || !mongodb.host || !mongodb.port || !mongodb.database) {
+                return res.error("MongoDB 配置不完整");
+            }
+        } else {
+            return res.error("不支持的数据库类型");
+        }
+        saveConfig({ dbType, mongodb, mysql, jwtSecret, noticeGoldenKey, noticeUsers });
         res.json({ message: "配置已保存，正在重启..." });
         setTimeout(() => process.exit(0), 1000);
     });

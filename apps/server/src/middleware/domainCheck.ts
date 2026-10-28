@@ -10,7 +10,7 @@ export const domainCheck = async (req: Request, res: Response, next: NextFunctio
         return next();
     }
 
-    const gameRepo = AppDataSource.getMongoRepository(Game);
+    const gameRepo = AppDataSource.getRepository(Game);
     const game = await gameRepo.findOneBy({ key: gameKey as string });
 
     if (!game) {

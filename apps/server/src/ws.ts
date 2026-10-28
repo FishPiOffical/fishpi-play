@@ -44,20 +44,23 @@ export function registerWebSocketServer(wss: WebSocketServer) {
             clients.set(clientId, clientInfo);
 
             // 记录登录并同步属性
-            const gameUserRepo = AppDataSource.getMongoRepository(GameUser);
-            gameUserRepo.findOneAndUpdate(
-                { gameKey, userId },
-                {
-                    $set: { lastLoginAt: new Date() },
-                    $setOnInsert: { gameKey, userId, attributes: {} }
-                },
-                { upsert: true, returnDocument: 'after' }
-            ).then(result => {
-                if (result && result.value) {
-                    clientInfo.attributes = result.value.attributes || {};
-                    ws.send(JSON.stringify({ type: "attributes_sync", attributes: clientInfo.attributes }));
+            const gameUserRepo = AppDataSource.getRepository(GameUser);
+            (async () => {
+                let gameUser = await gameUserRepo.findOneBy({ gameKey, userId });
+                if (!gameUser) {
+                    gameUser = gameUserRepo.create({
+                        gameKey,
+                        userId,
+                        attributes: {},
+                        lastLoginAt: new Date()
+                    });
+                } else {
+                    gameUser.lastLoginAt = new Date();
                 }
-            });
+                await gameUserRepo.save(gameUser);
+                clientInfo.attributes = gameUser.attributes || {};
+                ws.send(JSON.stringify({ type: "attributes_sync", attributes: clientInfo.attributes }));
+            })().catch(e => console.error("WS Login record error:", e));
 
             ws.on("message", async (message) => {
                 try {
@@ -69,10 +72,11 @@ export function registerWebSocketServer(wss: WebSocketServer) {
                         clientInfo.attributes = data.attributes;
 
                         // 持久化属性
-                        await gameUserRepo.updateOne(
-                            { gameKey, userId },
-                            { $set: { attributes: data.attributes } }
-                        );
+                        let gameUser = await gameUserRepo.findOneBy({ gameKey, userId });
+                        if (gameUser) {
+                            gameUser.attributes = data.attributes;
+                            await gameUserRepo.save(gameUser);
+                        }
 
                         ws.send(JSON.stringify({ type: "attributes_updated", attributes: clientInfo.attributes }));
                     } else if (data.type === "get_devices") {

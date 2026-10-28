@@ -1,21 +1,25 @@
 import { Router } from "express";
-import { AppDataSource } from "../data-source";
+import { AppDataSource, isMongo } from "../data-source";
 import { Game } from "../entities/Game";
 import { authenticate } from "../middleware/auth";
 import { FingerTo } from "fishpi";
 import { getConfig } from "../config";
+import { In, Not } from "typeorm";
 
 const router = Router();
 router.use(authenticate);
 
 router.post("/register", async (req: any, res) => {
     const { name, key, loginCallbackPath, domainWhitelist, description } = req.body;
-    const gameRepo = AppDataSource.getMongoRepository(Game);
+    const gameRepo = AppDataSource.getRepository(Game);
     
     const existing = await gameRepo.findOne({
-        where: {
+        where: isMongo ? {
             key,
-            status: { $nin: ['rejected', 'decommissioned'] }
+            status: { $nin: ['rejected', 'decommissioned'] } as any
+        } : {
+            key,
+            status: Not(In(['rejected', 'decommissioned']))
         }
     });
     if (existing) {
@@ -49,30 +53,52 @@ router.post("/register", async (req: any, res) => {
 
 router.get("/", async (req: any, res) => {
     const { searchValue, status } = req.query;
-    const gameRepo = AppDataSource.getMongoRepository(Game);
+    const gameRepo = AppDataSource.getRepository(Game);
     
-    const query: any = {};
-    
-    // 权限检查：非管理员只能看自己创建的游戏
-    if (!req.user.isAdmin) {
-        query.createBy = req.user.username;
-    }
-    
-    if (status) {
-        query.status = status;
-    }
-    
-    if (searchValue) {
-        const regex = { $regex: searchValue, $options: "i" };
-        query.$or = [
-            { name: regex },
-            { key: regex },
-            { description: regex }
-        ];
-    }
+    if (isMongo) {
+        const query: any = {};
+        
+        // 权限检查：非管理员只能看自己创建的游戏
+        if (!req.user.isAdmin) {
+            query.createBy = req.user.username;
+        }
+        
+        if (status) {
+            query.status = status;
+        }
+        
+        if (searchValue) {
+            const regex = { $regex: searchValue, $options: "i" };
+            query.$or = [
+                { name: regex },
+                { key: regex },
+                { description: regex }
+            ];
+        }
 
-    const games = await gameRepo.find({ where: query });
-    res.json(games);
+        const games = await gameRepo.find({ where: query });
+        return res.json(games);
+    } else {
+        const qb = gameRepo.createQueryBuilder("game");
+
+        if (!req.user.isAdmin) {
+            qb.andWhere("game.createBy = :createBy", { createBy: req.user.username });
+        }
+
+        if (status) {
+            qb.andWhere("game.status = :status", { status });
+        }
+
+        if (searchValue) {
+            qb.andWhere(
+                "(game.name LIKE :search OR game.key LIKE :search OR game.description LIKE :search)",
+                { search: `%${searchValue}%` }
+            );
+        }
+
+        const games = await qb.getMany();
+        return res.json(games);
+    }
 });
 
 export default router;

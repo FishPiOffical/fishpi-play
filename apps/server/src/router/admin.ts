@@ -1,8 +1,7 @@
 import { Router } from "express";
-import { AppDataSource } from "../data-source";
+import { AppDataSource, findGameById } from "../data-source";
 import { Game } from "../entities/Game";
 import { authenticate } from "../middleware/auth";
-import { ObjectId } from "mongodb";
 import { FingerTo } from "fishpi";
 import { getConfig } from "../config";
 
@@ -20,8 +19,8 @@ router.use((req, res, next) => {
 // Approve a game
 router.post("/games/:id/approve", async (req, res) => {
     try {
-        const gameRepo = AppDataSource.getMongoRepository(Game);
-        const game = await gameRepo.findOneBy({ _id: new ObjectId(req.params.id) } as any);
+        const gameRepo = AppDataSource.getRepository(Game);
+        const game = await findGameById(req.params.id);
         
         if (!game) {
             return res.status(404).error("Game not found");
@@ -45,8 +44,8 @@ router.post("/games/:id/decommission", async (req, res) => {
     }
 
     try {
-        const gameRepo = AppDataSource.getMongoRepository(Game);
-        const game = await gameRepo.findOneBy({ _id: new ObjectId(req.params.id) } as any);
+        const gameRepo = AppDataSource.getRepository(Game);
+        const game = await findGameById(req.params.id);
         
         if (!game) {
             return res.status(404).error("Game not found");
@@ -71,8 +70,8 @@ router.post("/games/:id/reject", async (req, res) => {
     }
 
     try {
-        const gameRepo = AppDataSource.getMongoRepository(Game);
-        const game = await gameRepo.findOneBy({ _id: new ObjectId(req.params.id) } as any);
+        const gameRepo = AppDataSource.getRepository(Game);
+        const game = await findGameById(req.params.id);
         
         if (!game) {
             return res.status(404).error("Game not found");
