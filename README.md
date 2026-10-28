@@ -65,6 +65,29 @@
    npm run dev --prefix apps/admin
    ```
 
+### 📦 数据库迁移 (MongoDB -> MySQL)
+
+如需从旧版 MongoDB 迁移数据至 MySQL：
+
+1. **导出 MongoDB 数据**（自动备份至 `./data/mongo-backup`）：
+   ```bash
+   npm run db:export
+   # 或指定连接串与输出目录
+   npm run db:export -- --url "mongodb://127.0.0.1:27017/game-platform" --out "./data/mongo-backup"
+   ```
+
+2. **导入数据至 MySQL**（自动初始化库表与索引，并更新 `config.json`）：
+   ```bash
+   npm run db:import
+   # 或指定 MySQL 参数
+   npm run db:import -- --host localhost --port 3306 --user root --password "your_pass" --database game-platform
+   ```
+
+3. **或者一步完成直接迁移**：
+   ```bash
+   npm run db:migrate
+   ```
+
 ## 🗺️ 开发者指南
 
 ### 游戏注册流程

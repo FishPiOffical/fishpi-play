@@ -38,7 +38,10 @@ export const saveConfig = (newConfig: AppConfig) => {
     fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2));
 };
 
-export const IS_CONFIGURED = !!config;
+export const IS_CONFIGURED =
+    !!config ||
+    (process.env.DB_TYPE === "mysql" && (!!process.env.MYSQL_HOST || !!process.env.MYSQL_URL)) ||
+    (process.env.DB_TYPE === "mongodb" && !!process.env.MONGO_URL);
 
 export const JWT_SECRET = config?.jwtSecret || process.env.JWT_SECRET || "game-platform-secret";
 
