@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node --files src/index.ts'",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "db:export": "ts-node src/scripts/export-mongo.ts",
+    "db:import": "ts-node src/scripts/import-mysql.ts",
+    "db:migrate": "ts-node src/scripts/migrate.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",

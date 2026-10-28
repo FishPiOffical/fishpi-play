@@ -9,7 +9,10 @@
     "build": "npm run build:sdk && npm run build:server && npm run build:admin && cp apps/server/package.json dist/",
     "build:sdk": "cd packages/sdk && npm run build",
     "build:admin": "cd apps/admin && npm run build",
-    "build:server": "cd apps/server && npm run build"
+    "build:server": "cd apps/server && npm run build",
+    "db:export": "npm --workspace apps/server run db:export --",
+    "db:import": "npm --workspace apps/server run db:import --",
+    "db:migrate": "npm --workspace apps/server run db:migrate --"
   },
   "engines": {
     "node": ">=18"
