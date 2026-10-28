@@ -65,26 +65,31 @@
    npm run dev --prefix apps/admin
    ```
 
-### 📦 数据库迁移 (MongoDB -> MySQL)
+### 📦 数据库迁移与导入导出 (MongoDB / MySQL)
 
-如需从旧版 MongoDB 迁移数据至 MySQL：
+脚本会自动优先读取 `config.json` 中的 `mongodb` 与 `mysql` 连接配置，你可以通过 `--dataType`（或 `--type`）指定操作的数据库类型，无需重复输入主机与账号密码：
 
-1. **导出 MongoDB 数据**（自动备份至 `./data/mongo-backup`）：
+1. **导出数据**（支持从 MongoDB 或 MySQL 导出，自动生成 JSON 备份）：
    ```bash
-   npm run db:export
-   # 或指定连接串与输出目录
-   npm run db:export -- --url "mongodb://127.0.0.1:27017/game-platform" --out "./data/mongo-backup"
+   # 直接读取 config.json 中的 mongodb 配置进行导出
+   npm run db:export -- --dataType mongodb
+
+   # 或直接读取 config.json 中的 mysql 配置进行导出
+   npm run db:export -- --dataType mysql
    ```
 
-2. **导入数据至 MySQL**（自动初始化库表与索引，并更新 `config.json`）：
+2. **导入数据**（自动建立库表、去重并同步索引）：
    ```bash
-   npm run db:import
-   # 或指定 MySQL 参数
-   npm run db:import -- --host localhost --port 3306 --user root --password "your_pass" --database game-platform
+   # 直接读取 config.json 中的 mysql 配置导入数据（并自动将系统切换为 mysql 模式）
+   npm run db:import -- --dataType mysql
+
+   # 或导入到 mongodb
+   npm run db:import -- --dataType mongodb
    ```
 
-3. **或者一步完成直接迁移**：
+3. **一键全量迁移 (MongoDB -> 备份文件 -> MySQL)**：
    ```bash
+   # 脚本将同时读取 config.json 中的 mongodb（作为源库）和 mysql（作为目标库）直接完成全量迁移
    npm run db:migrate
    ```
 

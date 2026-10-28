@@ -4,3 +4,5 @@ config.json
 *.sh
 cache
 .env
+data
+apps/server/data
